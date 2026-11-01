@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Temperature Analyzer | Wokwi IoT Platform</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-base: #06090f;
+      --bg-surface: #0b1120;
+      --bg-card: #131d31;
+      --bg-card-hover: #19253d;
+      --border-color: #23314e;
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      
+      --accent-blue: #38bdf8;
+      --accent-blue-glow: rgba(56, 189, 248, 0.25);
+      --accent-red: #ef4444;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-purple: #8b5cf6;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 300px;
+      background-color: var(--bg-surface);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 20px;
+      flex-shrink: 0;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px var(--accent-blue-glow);
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    /* Mode Navigation Tabs */
+    .tab-pills {
+      display: flex;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .tab-pill {
+      flex: 1;
+      text-align: center;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-pill.active {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Action Buttons */
+    .btn {
+      border: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      transform: translateY(-1px);
+    }
+
+    .btn-wokwi {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+    }
+    .btn-wokwi:hover {
+      background: linear-gradient(135deg, #047857, #059669);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: #475569;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Status Indicators */
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent-green);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-green);
+      box-shadow: 0 0 10px var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.15); }
+    }
+
+    .info-card {
+      background: rgba(19, 29, 49, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    .info-card strong { color: var(--text-primary); }
+
+    /* Main Dashboard View */
+    .main-content {
+      flex: 1;
+      padding: 30px 36px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .metric-card:hover {
+      border-color: #3b82f6;
+      transform: translateY(-2px);
+    }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .metric-card.accent-blue::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+    .metric-card.accent-green::before { background: linear-gradient(90deg, #059669, #10b981); }
+    .metric-card.accent-red::before { background: linear-gradient(90deg, #dc2626, #ef4444); }
+    .metric-card.accent-purple::before { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+
+    .metric-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+    .metric-value {
+      font-size: 32px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: #fff;
+      letter-spacing: -1px;
+    }
+    .metric-subtext {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Chart Card */
+    .chart-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 22px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .chart-title { font-size: 15px; font-weight: 700; }
+    .chart-legend-custom {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .legend-line { width: 16px; height: 3px; border-radius: 2px; }
+    .legend-dashed { width: 16px; border-top: 2px dashed #ef4444; }
+
+    .canvas-wrapper {
+      position: relative;
+      height: 380px;
+      width: 100%;
+    }
+
+    /* Wokwi Hardware Studio Panel */
+    .wokwi-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .wokwi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .code-box {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #cbd5e1;
+      height: 280px;
+      overflow-y: auto;
+      white-space: pre;
+    }
+
+    /* History Table */
+    .history-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 20px 24px;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+    .history-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    .history-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+    .history-table tr:hover td { background-color: rgba(255, 255, 255, 0.02); }
+
+    /* Spinner */
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top: 2px solid #ffffff;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    @media (max-width: 950px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; }
+      .wokwi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ======================================================================
+       Sidebar
+       ====================================================================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">Smart Temp IoT</div>
+        <div class="brand-subtitle">Wokwi + Telemetry Analyzer</div>
+      </div>
+    </div>
+
+    <!-- Navigation Pills -->
+    <div class="tab-pills">
+      <div class="tab-pill active" id="tabDashboard" onclick="switchView('dashboard')">📊 Analytics</div>
+      <div class="tab-pill" id="tabWokwi" onclick="switchView('wokwi')">🛠️ Wokwi Studio</div>
+    </div>
+
+    <!-- Live Telemetry Controls -->
+    <button id="btnRunSimulation" class="btn btn-primary" onclick="runSimulation()">
+      <span class="spinner" id="btnSpinner"></span>
+      <span id="btnText">▶ Run 500-pt Diurnal Run</span>
+    </button>
+
+    <button id="btnLiveStream" class="btn btn-secondary" onclick="toggleLiveSim()">
+      <span id="btnLiveDot" style="width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>
+      <span id="btnLiveText">Start Live Telemetry (500ms)</span>
+    </button>
+
+    <!-- Web Serial API Button -->
+    <button id="btnWebSerial" class="btn btn-secondary" onclick="connectWebSerial()" style="border-color: #3b82f6;">
+      🔌 Connect Web Serial (USB/COM)
+    </button>
+
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      <span>BACKEND READY (:5000)</span>
+    </div>
+
+    <div class="info-card">
+      <strong>Pipeline Architecture:</strong><br>
+      • 500ms AM2302/DHT22 Sampling<br>
+      • Rolling Z-Score Outlier Rejection (>3σ)<br>
+      • Centered Moving Average Filter<br>
+      • Central Finite Difference (dT/dt)<br>
+      • Least Squares 20-Step Trendline<br>
+      • SQLite Persistence (temperature_logs.db)
+    </div>
+
+    <!-- 1-Click Wokwi Quick Link -->
+    <a href="https://wokwi.com/projects/new/esp32" target="_blank" class="btn btn-wokwi" style="text-decoration: none;">
+      🚀 Open Wokwi ESP32 Simulator
+    </a>
+  </aside>
+
+  <!-- ======================================================================
+       Main Content Area
+       ====================================================================== -->
+  <main class="main-content">
+    <header class="top-bar">
+      <div>
+        <h1 class="page-title">Smart Temperature Analyzer</h1>
+        <p class="page-subtitle">Computational Signal Processing, Thermal Derivative & Predictive Forecasting</p>
+      </div>
+      <div id="telemetryStatus" style="font-size: 12px; font-family: var(--font-mono); color: var(--text-muted);">
+        Awaiting telemetry packets...
+      </div>
+    </header>
+
+    <!-- ================= VIEW 1: DASHBOARD ANALYTICS ================= -->
+    <div id="viewDashboard" style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Metrics Grid -->
+      <section class="metrics-grid">
+        <!-- Metric 1: Latest Temp -->
+        <div class="metric-card accent-blue">
+          <div class="metric-label">
+            <span>Latest Temperature (°C)</span>
+            <span>🌡️</span>
+          </div>
+          <div class="metric-value" id="valCurrentTemp">--</div>
+          <div class="metric-subtext">Smoothed Ambient Reading</div>
+        </div>
+
+        <!-- Metric 2: Rate of Change -->
+        <div class="metric-card accent-green">
+          <div class="metric-label">
+            <span>Rate of Change (dT/dt)</span>
+            <span>📈</span>
+          </div>
+          <div class="metric-value" id="valRateOfChange">--</div>
+          <div class="metric-subtext">°C / step (Central Difference)</div>
+        </div>
+
+        <!-- Metric 3: Predicted Temp -->
+        <div class="metric-card accent-red">
+          <div class="metric-label">
+            <span>Projected Temp (+20 Steps)</span>
+            <span>🔮</span>
+          </div>
+          <div class="metric-value" id="valPredictedTemp">--</div>
+          <div class="metric-subtext">Least Squares Trend Forecast</div>
+        </div>
+
+        <!-- Metric 4: Thermal Safety State -->
+        <div class="metric-card accent-purple">
+          <div class="metric-label">
+            <span>Thermal Safety State</span>
+            <span>🛡️</span>
+          </div>
+          <div class="metric-value" id="valThermalSafety" style="font-size: 22px; color: #10b981;">NOMINAL</div>
+          <div class="metric-subtext" id="valGlitchCount">0 Anomalies Detected</div>
+        </div>
+      </section>
+
+      <!-- Chart View -->
+      <section class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Thermal Telemetry & Predictive Forecast</div>
+          <div class="chart-legend-custom">
+            <div class="legend-item">
+              <span class="legend-dot" style="background-color: #94a3b8;"></span>
+              <span>Raw Sensor Data (Scatter)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="background-color: #38bdf8;"></span>
+              <span>Filtered Signal (Moving Avg)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dashed"></span>
+              <span>Least Squares Forecast (+20 Steps)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <canvas id="temperatureChart"></canvas>
+        </div>
+      </section>
+
+      <!-- SQLite History -->
+      <section class="history-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 14px; font-weight: 700;">SQLite Predictions Log (temperature_logs.db)</h3>
+          <button onclick="fetchHistory()" class="btn btn-secondary" style="width: auto; padding: 4px 10px; font-size: 11px;">
+            ↻ Refresh Logs
+          </button>
+        </div>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Source</th>
+              <th>Timestamp</th>
+              <th>Current Temp</th>
+              <th>dT/dt Rate</th>
+              <th>Predicted (+20)</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No records loaded.</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- ================= VIEW 2: WOKWI HARDWARE STUDIO ================= -->
+    <div id="viewWokwi" class="wokwi-panel">
+      <div>
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">🛠️ Wokwi Hardware Simulation Studio</h2>
+        <p style="font-size: 13px; color: var(--text-secondary);">
+          Simulate the complete ESP32 microcontroller and DHT22 temperature sensor directly in software.
+        </p>
+      </div>
+
+      <!-- Quick Setup Instructions Banner -->
+      <div class="info-card" style="border-left: 4px solid var(--accent-green); background: rgba(16, 185, 129, 0.08);">
+        <strong>Quick 30-Second Wokwi Setup:</strong><br>
+        1. Click the button below to open <a href="https://wokwi.com/projects/new/esp32" target="_blank" style="color: var(--accent-blue);">wokwi.com/projects/new/esp32</a>.<br>
+        2. Copy the <strong>C++ Firmware (sketch.ino)</strong> and <strong>Wiring Diagram (diagram.json)</strong> from the boxes below.<br>
+        3. Add <code>DHT sensor library</code> in Wokwi's Library Manager and press <strong>Play ▶</strong>!<br>
+        4. Drag the virtual DHT22 temperature slider in Wokwi to inject real-time thermal changes!
+      </div>
+
+      <div class="wokwi-grid">
+        <!-- Code Box 1: Firmware -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--accent-blue);">sketch.ino (ESP32 C++ Firmware)</span>
+            <button onclick="copyCode('codeSketch')" class="btn btn-secondary" style="width: auto; padding: 4px 8px; font-size: 11px;">📋 Copy</button>
+          </div>
+          <div class="code-box" id="codeSketch">Loading sketch.ino...</div>
+        </div>
+
+        <!-- Code Box 2: Diagram JSON -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--accent-green);">diagram.json (Virtual Circuit Wiring)</span>
+            <button onclick="copyCode('codeDiagram')" class="btn btn-secondary" style="width: auto; padding: 4px 8px; font-size: 11px;">📋 Copy</button>
+          </div>
+          <div class="code-box" id="codeDiagram">Loading diagram.json...</div>
+        </div>
+      </div>
+
+      <!-- Hardware Pinout Map -->
+      <div class="info-card">
+        <strong>Hardware Wiring Matrix:</strong>
+        <table class="history-table" style="margin-top: 8px;">
+          <thead>
+            <tr><th>Component</th><th>Component Pin</th><th>ESP32 GPIO</th><th>Function / Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>DHT22 Sensor</td><td>VCC</td><td>3.3V</td><td>Operating voltage</td></tr>
+            <tr><td>DHT22 Sensor</td><td>GND</td><td>GND</td><td>Ground reference</td></tr>
+            <tr><td>DHT22 Sensor</td><td>SDA / DATA</td><td>GPIO 4</td><td>Single-bus bi-directional data (with pull-up)</td></tr>
+            <tr><td>ESP32 DevKit</td><td>UART TX</td><td>Serial Monitor</td><td>Emits comma-separated CSV: <code>&lt;time_ms&gt;,&lt;temp_c&gt;</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================================================================
+       JavaScript Engine
+       ====================================================================== -->
+  <script>
+    const API_BASE = "http://localhost:5000";
+    let chartInstance = null;
+    let liveSimInterval = null;
+    let liveStep = 0;
+    let liveBaseTemp = 23.5;
+
+    // Initialize Chart.js
+    function initChart() {
+      const ctx = document.getElementById("temperatureChart").getContext("2d");
+      chartInstance = new Chart(ctx, {
+        type: "scatter",
+        data: {
+          datasets: [
+            {
+              label: "Raw Sensor Data",
+              data: [],
+              backgroundColor: "rgba(148, 163, 184, 0.4)",
+              borderColor: "transparent",
+              pointRadius: 2.5,
+              order: 3
+            },
+            {
+              label: "Filtered Signal",
+              type: "line",
+              data: [],
+              borderColor: "#38bdf8",
+              backgroundColor: "transparent",
+              borderWidth: 2.5,
+              tension: 0.25,
+              pointRadius: 0,
+              order: 2
+            },
+            {
+              label: "Predicted Trend",
+              type: "line",
+              data: [],
+              borderColor: "#ef4444",
+              backgroundColor: "transparent",
+              borderWidth: 2.5,
+              borderDash: [6, 6],
+              pointRadius: 3,
+              pointBackgroundColor: "#ef4444",
+              order: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "#131d31",
+              titleColor: "#f8fafc",
+              bodyColor: "#94a3b8",
+              borderColor: "#23314e",
+              borderWidth: 1,
+              padding: 10,
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} °C at step ${ctx.parsed.x}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: "linear",
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#94a3b8" }
+            },
+            y: {
+              grid: { color: "rgba(255, 255, 255, 0.05)" },
+              ticks: { color: "#94a3b8" }
+            }
+          }
+        }
+      });
+    }
+
+    // Switch between Analytics Dashboard and Wokwi Studio
+    function switchView(viewName) {
+      document.getElementById("tabDashboard").classList.toggle("active", viewName === "dashboard");
+      document.getElementById("tabWokwi").classList.toggle("active", viewName === "wokwi");
+      document.getElementById("viewDashboard").style.display = viewName === "dashboard" ? "flex" : "none";
+      document.getElementById("viewWokwi").style.display = viewName === "wokwi" ? "flex" : "none";
+
+      if (viewName === "wokwi") {
+        fetchWokwiFiles();
+      }
+    }
+
+    // Fetch batch 500-sample diurnal simulation
+    async function runSimulation() {
+      const btn = document.getElementById("btnRunSimulation");
+      const btnSpinner = document.getElementById("btnSpinner");
+      const btnText = document.getElementById("btnText");
+
+      btn.disabled = true;
+      btnSpinner.style.display = "inline-block";
+      btnText.textContent = "Computing...";
+
+      try {
+        const res = await fetch(`${API_BASE}/api/data`);
+        const data = await res.json();
+
+        updateMetricsAndChart(data);
+        document.getElementById("telemetryStatus").textContent = `Diurnal run complete • Log #${data.log_id} saved to SQLite`;
+        fetchHistory();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect to backend at " + API_BASE);
+      } finally {
+        btn.disabled = false;
+        btnSpinner.style.display = "none";
+        btnText.textContent = "▶ Run 500-pt Diurnal Run";
+      }
+    }
+
+    // Update UI Cards and Chart from response object
+    function updateMetricsAndChart(data) {
+      document.getElementById("valCurrentTemp").textContent = `${data.latest_temp.toFixed(2)}°`;
+      
+      const rate = data.rate_of_change;
+      const rateStr = (rate >= 0 ? "+" : "") + rate.toFixed(4);
+      document.getElementById("valRateOfChange").textContent = rateStr;
+      
+      document.getElementById("valPredictedTemp").textContent = `${data.predicted_temp_20.toFixed(2)}°`;
+
+      // Thermal Safety logic
+      const safetyElem = document.getElementById("valThermalSafety");
+      if (data.latest_temp > 30.0 || Math.abs(rate) > 0.08) {
+        safetyElem.textContent = "WARNING: HIGH TEMP";
+        safetyElem.style.color = "#ef4444";
+      } else {
+        safetyElem.textContent = "NOMINAL";
+        safetyElem.style.color = "#10b981";
+      }
+
+      document.getElementById("valGlitchCount").textContent = `${data.outlier_count || 0} Glitches Scrubbed`;
+
+      // Update Chart Datasets
+      chartInstance.data.datasets[0].data = data.raw_data;
+      chartInstance.data.datasets[1].data = data.filtered_data;
+      chartInstance.data.datasets[2].data = data.predicted_data;
+      chartInstance.update();
+    }
+
+    // Fetch and display SQLite History Table
+    async function fetchHistory() {
+      try {
+        const res = await fetch(`${API_BASE}/api/history`);
+        const data = await res.json();
+        const tbody = document.getElementById("historyTableBody");
+
+        if (!data.history || data.history.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No records in database.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.history.map(r => `
+          <tr>
+            <td>#${r.id}</td>
+            <td><span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(56, 189, 248, 0.1); color: #38bdf8;">${r.source || 'BATCH'}</span></td>
+            <td>${r.timestamp}</td>
+            <td style="color: #38bdf8; font-weight: 700;">${r.current_temp.toFixed(2)} °C</td>
+            <td style="color: ${r.rate_of_change >= 0 ? '#10b981' : '#f87171'};">${(r.rate_of_change >= 0 ? '+' : '') + r.rate_of_change.toFixed(4)}</td>
+            <td style="color: #ef4444; font-weight: 700;">${r.predicted_temp_in_20_steps.toFixed(2)} °C</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        console.warn("Could not load history:", err);
+      }
+    }
+
+    // Live Streaming Telemetry Generator (500ms intervals)
+    function toggleLiveSim() {
+      const dot = document.getElementById("btnLiveDot");
+      const txt = document.getElementById("btnLiveText");
+
+      if (liveSimInterval) {
+        clearInterval(liveSimInterval);
+        liveSimInterval = null;
+        dot.style.background = "#94a3b8";
+        txt.textContent = "Start Live Telemetry (500ms)";
+        document.getElementById("telemetryStatus").textContent = "Live telemetry paused.";
+      } else {
+        dot.style.background = "#10b981";
+        txt.textContent = "Stop Live Telemetry";
+        document.getElementById("telemetryStatus").textContent = "Streaming live telemetry every 500ms...";
+
+        liveSimInterval = setInterval(async () => {
+          liveStep++;
+          // Thermal physics: diurnal wave + random walk noise + 2% glitch injection
+          liveBaseTemp += (Math.random() - 0.49) * 0.15;
+          let tempSample = liveBaseTemp + (Math.random() - 0.5) * 0.4;
+          
+          // 2% random extreme outlier glitch
+          if (Math.random() < 0.02) {
+            tempSample = Math.random() < 0.5 ? 88.5 : -18.2;
+          }
+
+          // Push to backend /api/telemetry
+          try {
+            await fetch(`${API_BASE}/api/telemetry`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ time: liveStep * 500, temperature: roundVal(tempSample, 2) })
+            });
+
+            // Fetch latest live rolling state
+            const res = await fetch(`${API_BASE}/api/live`);
+            const data = await res.json();
+            updateMetricsAndChart(data);
+          } catch (e) {
+            console.error("Live streaming error", e);
+          }
+        }, 500);
+      }
+    }
+
+    // Web Serial API (Direct Browser-to-Hardware USB/COM port)
+    async function connectWebSerial() {
+      if (!("serial" in navigator)) {
+        alert("Web Serial API is not supported in this browser. Please use Chrome or Edge.");
+        return;
+      }
+      try {
+        const port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 115200 });
+        alert("Connected to Serial Port! Listening for ESP32 telemetry...");
+
+        const textDecoder = new TextDecoderStream();
+        const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+        const reader = textDecoder.readable.getReader();
+
+        let lineBuffer = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          lineBuffer += value;
+          const lines = lineBuffer.split("\n");
+          lineBuffer = lines.pop();
+
+          for (const line of lines) {
+            const parts = line.trim().split(",");
+            if (parts.length === 2) {
+              const t_ms = parseFloat(parts[0]);
+              const temp_c = parseFloat(parts[1]);
+              if (!isNaN(t_ms) && !isNaN(temp_c)) {
+                await fetch(`${API_BASE}/api/telemetry`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ time: t_ms, temperature: temp_c })
+                });
+                const res = await fetch(`${API_BASE}/api/live`);
+                const data = await res.json();
+                updateMetricsAndChart(data);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Serial error:", err);
+      }
+    }
+
+    // Load Wokwi Files from backend
+    async function fetchWokwiFiles() {
+      try {
+        const res = await fetch(`${API_BASE}/api/wokwi-project`);
+        const data = await res.json();
+        document.getElementById("codeSketch").textContent = data.sketch;
+        document.getElementById("codeDiagram").textContent = data.diagram;
+      } catch (err) {
+        console.warn("Could not load Wokwi files:", err);
+      }
+    }
+
+    async function pollLiveBackend() {
+      try {
+        const res = await fetch(`${API_BASE}/api/live`);
+        const data = await res.json();
+        if (data.live_count > 0) {
+          updateMetricsAndChart(data);
+          const rateStr = (data.rate_of_change >= 0 ? "+" : "") + data.rate_of_change.toFixed(4);
+          document.getElementById("telemetryStatus").textContent = 
+            `🟢 Live Sensor Active (${data.live_count} pts) • Latest: ${data.latest_temp.toFixed(2)}°C • dT/dt: ${rateStr}`;
+        }
+      } catch (e) {}
+    }
+
+    function copyCode(elemId) {
+      const text = document.getElementById(elemId).textContent;
+      navigator.clipboard.writeText(text);
+      alert("Copied to clipboard!");
+    }
+
+    function roundVal(num, dec) {
+      return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initChart();
+      // Automatically poll live hardware telemetry every 600ms
+      pollLiveBackend();
+      setInterval(pollLiveBackend, 600);
+      setInterval(fetchHistory, 5000);
+    });
+  </script>
+</body>
+</html>
