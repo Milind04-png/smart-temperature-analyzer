@@ -363,6 +363,54 @@ def get_wokwi_project():
 
 
 # =============================================================================
+# 4. DBMS Academic Module Endpoints (PDF Slides 7, 10, 15, 16, 17, 21)
+# =============================================================================
+
+@app.route("/api/dbms/overview", methods=["GET"])
+def get_dbms_overview():
+    """Returns the exact calculations, interpolation tables, and results matching Slide 21."""
+    from analyser import run_analysis
+    results = run_analysis(plot_graphs=False)
+    return jsonify({
+        "status": "success",
+        "project": "SMART TEMPERATURE DATA ANALYSER",
+        "course": "Data Base Management System (Batch 2025-2029)",
+        "results": results
+    })
+
+
+@app.route("/api/dbms/tables", methods=["GET"])
+def get_dbms_tables():
+    """Returns the 4 relational tables from Slide 10 ER Diagram."""
+    import dbms_database
+    conn = dbms_database.get_connection()
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM SENSOR")
+    sensors = [dict(row) for row in c.fetchall()]
+
+    c.execute("SELECT * FROM READING ORDER BY time_hr")
+    readings = [dict(row) for row in c.fetchall()]
+
+    c.execute("SELECT * FROM ESTIMATE ORDER BY est_id")
+    estimates = [dict(row) for row in c.fetchall()]
+
+    c.execute("SELECT * FROM EXPOSURE_REPORT ORDER BY report_id DESC")
+    reports = [dict(row) for row in c.fetchall()]
+
+    conn.close()
+    return jsonify({
+        "status": "success",
+        "tables": {
+            "SENSOR": sensors,
+            "READING": readings,
+            "ESTIMATE": estimates,
+            "EXPOSURE_REPORT": reports
+        }
+    })
+
+
+# =============================================================================
 # Main Entry Point
 # =============================================================================
 if __name__ == "__main__":

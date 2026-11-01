@@ -421,6 +421,7 @@
     <!-- Navigation Pills -->
     <div class="tab-pills">
       <div class="tab-pill active" id="tabDashboard" onclick="switchView('dashboard')">📊 Analytics</div>
+      <div class="tab-pill" id="tabDbms" onclick="switchView('dbms')">📚 DBMS Project</div>
       <div class="tab-pill" id="tabWokwi" onclick="switchView('wokwi')">🛠️ Wokwi Studio</div>
     </div>
 
@@ -626,6 +627,156 @@
         </table>
       </div>
     </div>
+
+    <!-- ================= VIEW 3: DBMS ACADEMIC ANALYSIS ================= -->
+    <div id="viewDbms" class="wokwi-panel">
+      <!-- Title & Academic Metadata matching Slide 1 -->
+      <div style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.15), rgba(37, 99, 235, 0.08)); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <span style="font-size: 11px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 1.5px;">Delhi Technical Campus | GGSIPU</span>
+            <h2 style="font-size: 22px; font-weight: 800; color: #fff; margin: 4px 0;">SMART TEMPERATURE DATA ANALYSER</h2>
+            <p style="font-size: 13px; color: var(--text-secondary);">
+              <strong>Course:</strong> Data Base Management System | <strong>Department:</strong> Computer Science & Engineering | <strong>Batch:</strong> 2025-2029 | <strong>Section:</strong> D G-3
+            </p>
+          </div>
+          <button onclick="fetchDbmsData()" class="btn btn-primary" style="width: auto; padding: 8px 16px; font-size: 12px;">
+            ⚡ Re-run analyser.py
+          </button>
+        </div>
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 12px; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 18px;">
+          <span><strong>Presented By:</strong></span>
+          <span>Vaneesha Singh (21818002725)</span>
+          <span>Anisha Dubey (22018002725)</span>
+          <span>Amritanshu Mishra (22218002725)</span>
+          <span>Sumit Chourasia (22618002725)</span>
+          <span style="color: var(--accent-blue); font-weight: 700;">Milind Shukla (22718002725)</span>
+        </div>
+      </div>
+
+      <!-- Key Numerical Results Grid (Slides 15, 16, 21) -->
+      <div class="metrics-grid">
+        <!-- 11:00 Estimate -->
+        <div class="metric-card accent-blue">
+          <div class="metric-label">
+            <span>Estimated T(11:00)</span>
+            <span>🎯</span>
+          </div>
+          <div class="metric-value" style="color: #38bdf8;">33.18 °C</div>
+          <div class="metric-subtext">Lagrange = Newton (Nodes: 8, 10, 12, 14)</div>
+        </div>
+
+        <!-- Hold-out Validation -->
+        <div class="metric-card accent-green">
+          <div class="metric-label">
+            <span>Hold-out Validation</span>
+            <span>✅</span>
+          </div>
+          <div class="metric-value" style="color: #10b981;">0.367 °C</div>
+          <div class="metric-subtext">Hide 12:00 (34.8°C) | Estimate 34.433°C (1.1% err)</div>
+        </div>
+
+        <!-- Cumulative Exposure (Simpson Hourly) -->
+        <div class="metric-card accent-purple">
+          <div class="metric-label">
+            <span>Total Exposure (06-18h)</span>
+            <span>☀️</span>
+          </div>
+          <div class="metric-value" style="color: #a855f7;">378.88 °C·h</div>
+          <div class="metric-subtext">Simpson 1/3 Rule (Completed Hourly Series)</div>
+        </div>
+
+        <!-- Mean Temperature -->
+        <div class="metric-card accent-red">
+          <div class="metric-label">
+            <span>Mean Temperature</span>
+            <span>🌡️</span>
+          </div>
+          <div class="metric-value" style="color: #f87171;">31.57 °C</div>
+          <div class="metric-subtext">Trapezoid 377.80 vs Simpson 2h 379.07 (0.34% diff)</div>
+        </div>
+      </div>
+
+      <!-- Slide 19 Charts: Reconstructed Temperature & Cumulative Exposure -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="chart-card">
+          <div class="chart-title">Reconstructed temperature (°C) — Slide 19</div>
+          <div class="canvas-wrapper" style="height: 300px;">
+            <canvas id="dbmsReconstructionChart"></canvas>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+            <span><strong>Measured:</strong> 7 readings, every 2 h</span>
+            <span style="color: var(--accent-blue);"><strong>Estimated:</strong> 6 gaps filled by Lagrange</span>
+            <span><strong>Total:</strong> 13 hourly points</span>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">Cumulative exposure (°C·h) — Slide 19</div>
+          <div class="canvas-wrapper" style="height: 300px;">
+            <canvas id="dbmsExposureChart"></canvas>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 8px;">
+            <span>06:00 → 0.0</span>
+            <span>12:00 → 176.2</span>
+            <span>16:00 → 315.3</span>
+            <span style="color: #f87171; font-weight: 700;">18:00 → 377.8 °C·h</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 21 Terminal Output Simulation Box -->
+      <div class="info-card" style="background: #090d16; border: 1px solid #334155; padding: 18px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+          <span style="font-family: var(--font-mono); font-size: 12px; color: var(--accent-green); font-weight: 700;">💻 Terminal Execution Output (Slide 21 Verification)</span>
+          <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">python analyser.py</span>
+        </div>
+        <div class="code-box" style="height: 220px; font-size: 12px; color: #a5f3fc; line-height: 1.5;" id="dbmsTerminalOutput">
+=== SMART TEMPERATURE DATA ANALYSER ===
+
+[1] Missing reading at t = 11 h (nodes: [8, 10, 12, 14])
+    Lagrange            : 33.1812 C
+    Newton divided diff : 33.1812 C
+
+[2] Divided-difference table
+    order 1 : ['1.85000', '1.80000', '0.40000']
+    order 2 : ['-0.01250', '-0.35000']
+    order 3 : ['-0.05625']
+
+[3] Validation (hide t = 12, estimate from 8,10,14,16)
+    estimate 34.433 C | actual 34.800 C | error 0.367 C
+
+[5] Cumulative temperature exposure, 06:00 -> 18:00
+    Trapezoidal (2 h data)  : 377.80 C.h
+    Simpson 1/3 (2 h data)  : 379.07 C.h
+    Simpson 1/3 (hourly)    : 378.88 C.h
+    Mean temperature        : 31.57 C
+        </div>
+      </div>
+
+      <!-- Slide 10: 4-Table Relational Database Viewer -->
+      <div class="history-card">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 8px;">🗄️ Relational Database Tables (Slide 10 ER Model)</h3>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;">
+          Direct SQLite queries from <code>smart_temperature_db.db</code> showing all 4 entities: <code>SENSOR</code>, <code>READING</code>, <code>ESTIMATE</code>, and <code>EXPOSURE_REPORT</code>.
+        </p>
+
+        <!-- Sub-tabs for the 4 tables -->
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <button class="btn btn-secondary" onclick="showDbmsSubTable('READING')" style="width: auto; padding: 6px 12px; font-size: 11px;">READING (13 rows)</button>
+          <button class="btn btn-secondary" onclick="showDbmsSubTable('ESTIMATE')" style="width: auto; padding: 6px 12px; font-size: 11px;">ESTIMATE (12 rows)</button>
+          <button class="btn btn-secondary" onclick="showDbmsSubTable('SENSOR')" style="width: auto; padding: 6px 12px; font-size: 11px;">SENSOR (1 row)</button>
+          <button class="btn btn-secondary" onclick="showDbmsSubTable('EXPOSURE_REPORT')" style="width: auto; padding: 6px 12px; font-size: 11px;">EXPOSURE_REPORT (1 row)</button>
+        </div>
+
+        <div style="max-height: 260px; overflow-y: auto;">
+          <table class="history-table" id="dbmsTableViewer">
+            <thead><tr id="dbmsTableHead"></tr></thead>
+            <tbody id="dbmsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- ======================================================================
@@ -711,16 +862,166 @@
       });
     }
 
-    // Switch between Analytics Dashboard and Wokwi Studio
+    let dbmsReconChart = null;
+    let dbmsExposureChart = null;
+    let dbmsCachedTables = {};
+
+    // Switch between Analytics Dashboard, DBMS Project, and Wokwi Studio
     function switchView(viewName) {
       document.getElementById("tabDashboard").classList.toggle("active", viewName === "dashboard");
+      document.getElementById("tabDbms").classList.toggle("active", viewName === "dbms");
       document.getElementById("tabWokwi").classList.toggle("active", viewName === "wokwi");
+
       document.getElementById("viewDashboard").style.display = viewName === "dashboard" ? "flex" : "none";
+      document.getElementById("viewDbms").style.display = viewName === "dbms" ? "flex" : "none";
       document.getElementById("viewWokwi").style.display = viewName === "wokwi" ? "flex" : "none";
 
       if (viewName === "wokwi") {
         fetchWokwiFiles();
+      } else if (viewName === "dbms") {
+        fetchDbmsData();
       }
+    }
+
+    // Fetch and render DBMS Academic Analysis (Slides 10, 15, 16, 19, 21)
+    async function fetchDbmsData() {
+      try {
+        const [resOverview, resTables] = await Promise.all([
+          fetch(`${API_BASE}/api/dbms/overview`),
+          fetch(`${API_BASE}/api/dbms/tables`)
+        ]);
+
+        const ovData = await resOverview.json();
+        const tbData = await resTables.json();
+
+        dbmsCachedTables = tbData.tables || {};
+        showDbmsSubTable("READING");
+
+        // Render Slide 19 Chart 1: Reconstructed Temperature (06:00 to 18:00)
+        renderDbmsReconChart(ovData.results.hourly_t, ovData.results.hourly_y);
+
+        // Render Slide 19 Chart 2: Cumulative Exposure Curve
+        renderDbmsExposureChart();
+
+      } catch (err) {
+        console.error("Failed to load DBMS data:", err);
+      }
+    }
+
+    function renderDbmsReconChart(hours, temps) {
+      const ctx = document.getElementById("dbmsReconstructionChart").getContext("2d");
+      const labels = hours.map(h => `${Math.floor(h).toString().padStart(2, '0')}:00`);
+
+      if (dbmsReconChart) dbmsReconChart.destroy();
+
+      dbmsReconChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Reconstructed Temperature (°C)",
+            data: temps,
+            borderColor: "#0284c7",
+            backgroundColor: "rgba(2, 132, 199, 0.15)",
+            borderWidth: 2.5,
+            fill: true,
+            pointBackgroundColor: (ctx) => {
+              const idx = ctx.dataIndex;
+              return (hours[idx] % 2 === 0) ? "#0284c7" : "#38bdf8";
+            },
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const h = hours[ctx.dataIndex];
+                  const type = (h % 2 === 0) ? "Measured Reading" : "Lagrange Estimated Gap";
+                  return `${ctx.parsed.y.toFixed(2)} °C (${type})`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: "rgba(255, 255, 255, 0.05)" }, ticks: { color: "#94a3b8" } },
+            y: { min: 20, max: 38, grid: { color: "rgba(255, 255, 255, 0.05)" }, ticks: { stepSize: 4, color: "#94a3b8" } }
+          }
+        }
+      });
+    }
+
+    function renderDbmsExposureChart() {
+      const ctx = document.getElementById("dbmsExposureChart").getContext("2d");
+      const measLabels = ["06:00", "08:00", "10:00", "12:00", "14:00", "16:00", "18:00"];
+      const exposureVals = [0.0, 51.5, 110.2, 176.2, 246.6, 315.3, 377.8];
+
+      if (dbmsExposureChart) dbmsExposureChart.destroy();
+
+      dbmsExposureChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: measLabels,
+          datasets: [{
+            label: "Cumulative Exposure (°C·h)",
+            data: exposureVals,
+            borderColor: "#dc2626",
+            backgroundColor: "rgba(220, 38, 38, 0.1)",
+            borderWidth: 2.5,
+            fill: true,
+            pointBackgroundColor: "#dc2626",
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.parsed.y.toFixed(1)} °C·h`
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: "rgba(255, 255, 255, 0.05)" }, ticks: { color: "#94a3b8" } },
+            y: { min: 0, max: 450, grid: { color: "rgba(255, 255, 255, 0.05)" }, ticks: { stepSize: 50, color: "#94a3b8" } }
+          }
+        }
+      });
+    }
+
+    function showDbmsSubTable(tableName) {
+      const rows = dbmsCachedTables[tableName] || [];
+      const thead = document.getElementById("dbmsTableHead");
+      const tbody = document.getElementById("dbmsTableBody");
+
+      if (rows.length === 0) {
+        thead.innerHTML = "";
+        tbody.innerHTML = `<tr><td style="color: var(--text-muted);">No records found in table ${tableName}.</td></tr>`;
+        return;
+      }
+
+      const cols = Object.keys(rows[0]);
+      thead.innerHTML = cols.map(c => `<th>${c}</th>`).join("");
+      tbody.innerHTML = rows.map(r => `
+        <tr>${cols.map(c => {
+          let val = r[c];
+          if (c === 'temp_c' && r['is_missing'] === 1) return `<span style="color: #f87171; font-style: italic;">[MISSING GAP]</span>`;
+          if (c === 'abs_error') return `<span style="color: #10b981;">${Number(val).toExponential(3)}</span>`;
+          if (typeof val === 'number') return val.toFixed(2);
+          return val !== null ? val : 'NULL';
+        }).join("")}</tr>
+      `).join("");
     }
 
     // Fetch batch 500-sample diurnal simulation
